@@ -37,9 +37,10 @@ def classify0(inX, dataSet, labels, k):
 
     for i in range(k):
         voteIlable = labels[sortedDistances[i]]
+    #get(查找值， 找不到返回0)
 
         classCount[voteIlable] = classCount.get(voteIlable, 0) + 1
-    #iteritems()
+    #iteritems(1)以字典键大小排序
     sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True)
 
     return sortedClassCount[0][0]
@@ -74,3 +75,66 @@ def file_to_matrix(filename):
 
 
     return  returnMat, classLabelVetor
+
+
+def autoNorm(dataSet):
+    #归一化 (oldValue - minValue )/(maxValue - minValue)
+    minVals = dataSet.min(0)
+    maxVals = dataSet.max(0)
+    range = maxVals - minVals
+
+    normDataSet = zeros(shape(dataSet))
+    m = dataSet.shape[0]
+    normDataSet = dataSet - tile(minVals, (m, 1))
+
+    normDataSet = normDataSet/tile(range, (m, 1))
+
+    return normDataSet, range, minVals
+
+def datingClassTest():
+    """
+    分类器测试函数
+    :return
+    """
+
+    hoRatio  = 0.10
+    #hoRatio = 0.05
+
+    datingDataMat, datingLabels = file_to_matrix('datingTestSet2.txt')
+
+    normMat, ranges, minVals = autoNorm(datingDataMat)
+
+    m = normMat.shape[0]
+
+    numTestVecs = int(m * hoRatio)
+
+    errorCount = 0.0
+
+    for i in range(numTestVecs):
+        classifilerResult = classify0(normMat[i, :], normMat[numTestVecs:m, :], datingLabels[numTestVecs: m], 3)
+
+        print("the classifileer came back with:" + str(classifilerResult) + " the real answer is : "+ str(datingLabels[i]))
+
+        if(classifilerResult != datingLabels[i] ):
+            errorCount +=1
+
+
+    print("the totle error rate is "+ str(errorCount/numTestVecs) )
+
+
+
+#预测约会喜欢程度
+def classifyPerson():
+    resultList= ['不喜欢', '有一点喜欢', '很大兴趣']
+    percentTats = float(input("花费玩电子游戏时间"))
+
+    ffMiles = float(input("飞行时间"))
+    iceCream = float(input("消耗冰淇淋每年"))
+
+    datingDataMat, datingLables = file_to_matrix('datingTestSet2.txt')
+    normMat, ranges, minVales = autoNorm(datingDataMat)
+    inArr = array([ffMiles, percentTats, iceCream])
+    classifierResult = classify0( (inArr - minVales)/ranges, normMat, datingLables, 3 )
+
+    print("根据预测，你喜欢的程度" + resultList[classifierResult - 1])
+
